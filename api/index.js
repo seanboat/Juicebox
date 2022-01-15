@@ -10,9 +10,9 @@ apiRouter.use(async (req, res, next) => {
   const auth = req.header("Authorization");
 
   if (!auth) {
-    // nothing to see here
     next();
   } else if (auth.startsWith(prefix)) {
+    // 'Bearer token' -> 'Bearer token'.slice(7) -> 'token'
     const token = auth.slice(prefix.length);
 
     try {
@@ -35,7 +35,7 @@ apiRouter.use(async (req, res, next) => {
 
 apiRouter.use((req, res, next) => {
   if (req.user) {
-    console.log("User is set:", req.user);
+    console.log("User is set: ", req.user);
   }
 
   next();
