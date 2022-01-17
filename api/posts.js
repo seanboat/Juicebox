@@ -40,8 +40,15 @@ postsRouter.use((req, res, next) => {
 });
 
 postsRouter.get("/", async (req, res) => {
-  const posts = await getAllPosts();
-
+  const posts = (await getAllPosts()).filter((post) => {
+    if (post.active) {
+      return true;
+    }
+    if (req.user && post.author.id === req.user.id) {
+      return true;
+    }
+    return false;
+  });
   res.send({
     posts,
   });
@@ -76,6 +83,32 @@ postsRouter.patch("/:postId", requireUser, async (req, res, next) => {
         name: "UnauthorizedUserError",
         message: "Post can only be edited by authors",
       });
+    }
+  } catch ({ name, message }) {
+    next({ name, message });
+  }
+});
+
+postsRouter.delete("/:postId", requireUser, async (req, res, next) => {
+  try {
+    const post = await getPostById(req.params.postId);
+
+    if (post && post.author.id === req.user.id) {
+      const updatedPost = await updatePost(post.id, { active: false });
+
+      res.send({ post: updatedPost });
+    } else {
+      next(
+        post
+          ? {
+              name: "UnauthorizedUserError",
+              message: "Posts may only be deleted by their authors",
+            }
+          : {
+              name: "PostNotFoundError",
+              message: "Post does not exist",
+            }
+      );
     }
   } catch ({ name, message }) {
     next({ name, message });

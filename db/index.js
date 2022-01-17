@@ -233,6 +233,13 @@ async function getPostById(postId) {
       [postId]
     );
 
+    if (!post) {
+      throw {
+        name: "PostNotFoundError",
+        message: "Post not found",
+      };
+    }
+
     const { rows: tags } = await client.query(
       `
         SELECT tags.*
